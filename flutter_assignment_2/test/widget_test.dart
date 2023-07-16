@@ -6,14 +6,28 @@
 // tree, read text, and verify that the values of widget properties are correct.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_assignment_2/application/blocs/contact_bloc.dart';
+import 'package:flutter_assignment_2/application/screens/contact_list_screen.dart';
+import 'package:flutter_assignment_2/data/contact_data.dart';
+import 'package:flutter_assignment_2/data/contact_repository_impl.dart';
+import 'package:flutter_assignment_2/domain/repositories/contact_repository.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:flutter_assignment_2/main.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    final ContactRepository contactRepository = ContactRepositoryImpl(ContactData());
+    final ContactBloc contactBloc = ContactBloc(contactRepository);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: BlocProvider<ContactBloc>.value(
+          value: contactBloc,
+          child: const ContactListScreen(),
+        ),
+      ),
+    );
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);
