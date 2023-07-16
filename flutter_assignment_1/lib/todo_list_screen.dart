@@ -21,8 +21,6 @@ class _TodoListScreenState extends State<TodoListScreen> {
         todoList = data;
       });
     }).catchError((error) {
-      // Handle error here
-      print('Error: $error');
     });
   }
 
@@ -32,11 +30,9 @@ class _TodoListScreenState extends State<TodoListScreen> {
           await http.get(Uri.https('jsonplaceholder.typicode.com', '/todos'));
 
       if (response.statusCode == 200) {
-        // If the request is successful, parse the JSON response
         final List<dynamic> data = json.decode(response.body);
         return data;
       } else {
-        // If there is an error, throw an exception
         throw Exception('Failed to fetch todo list');
       }
     } catch (error) {
@@ -94,8 +90,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
                             isLoading = false;
                           });
                         }).catchError((error) {
-                          // Handle error here
-                          print('Error: $error');
+         
                           setState(() {
                             isLoading = false;
                           });
@@ -111,7 +106,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
                 itemCount: todoList.length,
                 itemBuilder: (context, index) {
                   final todo = todoList[
-                      index]; // Replace 'todoList' with your actual list of todos
+                      index]; 
 
                   return Card(
                     child: ListTile(
