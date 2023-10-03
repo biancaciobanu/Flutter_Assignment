@@ -1,123 +1,122 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:flutter_application_1/todo_list_repository.dart';
 
 class TodoListScreen extends StatefulWidget {
-  const TodoListScreen({super.key});
+  const TodoListScreen({Key? key}) : super(key: key);
 
   @override
   State<TodoListScreen> createState() => _TodoListScreenState();
 }
 
 class _TodoListScreenState extends State<TodoListScreen> {
+  final TodoRepository _todoRepository = TodoRepository();
   List<dynamic> todoList = [];
   bool isLoading = true;
+  String? errorMessage;
 
   @override
   void initState() {
     super.initState();
-    fetchTodoList().then((data) {
-      setState(() {
-        todoList = data;
-      });
-    }).catchError((error) {
-    });
+    _fetchTodoList();
   }
 
-  Future<List<dynamic>> fetchTodoList() async {
-    try {
-      final response =
-          await http.get(Uri.https('jsonplaceholder.typicode.com', '/todos'));
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        return data;
-      } else {
-        throw Exception('Failed to fetch todo list');
-      }
-    } catch (error) {
-      throw Exception('Error: $error');
-    } finally {
+  Future<void> _fetchTodoList() async {
+    final result = await Connectivity().checkConnectivity();
+    if (result == ConnectivityResult.none) {
       setState(() {
         isLoading = false;
+        errorMessage = 'No internet connection';
+      });
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    try {
+      final data = await _todoRepository.fetchTodoList();
+      setState(() {
+        todoList = data;
+        isLoading = false;
+      });
+    } catch (error) {
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Failed to load data. Please try again.';
       });
     }
+  }
+
+  Future<void> _reloadData() async {
+    await _fetchTodoList(); // Re-fetch data when "RELOAD" button is pressed
   }
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    } else {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            'Todo List',
-            style: TextStyle(color: Colors.black),
-          ),
-          backgroundColor: Colors.white,
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Todo List',
+          style: TextStyle(color: Colors.black),
         ),
-        body: todoList.isEmpty
-            ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      'Something went wrong',
-                      style: TextStyle(
-                        fontSize: 18,
+        backgroundColor: Colors.white,
+      ),
+      body: isLoading
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : errorMessage != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        errorMessage!,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          color: Colors.red,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Give it another try',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Give it another try',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          isLoading = true;
-                        });
-                        fetchTodoList().then((data) {
-                          setState(() {
-                            todoList = data;
-                            isLoading = false;
-                          });
-                        }).catchError((error) {
-         
-                          setState(() {
-                            isLoading = false;
-                          });
-                        });
-                      },
-                      child: const Text('RELOAD',
-                          style: TextStyle(color: Colors.blue)),
-                    ),
-                  ],
-                ),
-              )
-            : ListView.builder(
-                itemCount: todoList.length,
-                itemBuilder: (context, index) {
-                  final todo = todoList[
-                      index]; 
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: _reloadData,
+                        child: const Text(
+                          'RELOAD',
+                          style: TextStyle(color: Colors.blue),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _reloadData, // Pull down to refresh
+                  child: ListView.builder(
+                    itemCount: todoList.length,
+                    itemBuilder: (context, index) {
+                      final todo = todoList[index];
 
-                  return Card(
-                    child: ListTile(
-                      title: Text(todo['title']),
-                      subtitle: Text(
-                          todo['completed'] ? 'Completed' : 'Not Completed'),
-                    ),
-                  );
-                },
-              ),
-      );
-    }
+                      return Card(
+                        child: ListTile(
+                          title: Text(todo['title']),
+                          subtitle: Text(todo['completed']
+                              ? 'Completed'
+                              : 'Not Completed'),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+    );
   }
 }
