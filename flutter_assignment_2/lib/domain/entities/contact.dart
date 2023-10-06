@@ -3,7 +3,7 @@ class Contact {
   final String name;
   final String mobilePhoneNumber;
   final String landlineNumber;
-  final bool isFavorite;
+  late final bool isFavorite;
 
   Contact({
     this.id,
@@ -11,7 +11,10 @@ class Contact {
     required this.mobilePhoneNumber,
     required this.landlineNumber,
     this.isFavorite = false,
+    required String photoPath,
   });
+
+  String? get photoPath => null;
 
   Map<String, dynamic> toMap() {
     return {
@@ -30,6 +33,23 @@ class Contact {
       mobilePhoneNumber: map['mobilePhoneNumber'],
       landlineNumber: map['landlineNumber'],
       isFavorite: map['isFavorite'] == 1,
+      photoPath: '',
+    );
+  }
+  Contact copyWith({
+    int? id,
+    String? name,
+    String? mobilePhoneNumber,
+    String? landlineNumber,
+    bool? isFavorite,
+  }) {
+    return Contact(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      mobilePhoneNumber: mobilePhoneNumber ?? this.mobilePhoneNumber,
+      landlineNumber: landlineNumber ?? this.landlineNumber,
+      isFavorite: isFavorite ?? this.isFavorite,
+      photoPath: '',
     );
   }
 }

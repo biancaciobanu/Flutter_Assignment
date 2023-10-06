@@ -47,6 +47,20 @@ class ContactData {
     });
   }
 
+  Future<Contact> getContactById(int id) async {
+    final Database db = await _initializeDatabase();
+    final List<Map<String, dynamic>> maps = await db.query(
+      _tableName,
+      where: '$_columnId = ?',
+      whereArgs: [id],
+    );
+    if (maps.isNotEmpty) {
+      return Contact.fromMap(maps.first);
+    } else {
+      throw Exception('Contact not found');
+    }
+  }
+
   Future<void> updateContact(Contact contact) async {
     final Database db = await _initializeDatabase();
     await db.update(
